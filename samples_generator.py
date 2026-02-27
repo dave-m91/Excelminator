@@ -28,5 +28,11 @@ prompt = """
 
 raport_bledów = audyt_excela("notebooks/Sales_Data_With_Issues.xlsx")
 
-response = client.responses.create(model="gpt-4.1-mini", input="cześć, jak się masz?")
-print(response.output_text)
+
+wiadomosci = [
+    {"role": "system", "content": prompt},
+    {"role": "user", "content": raport_bledów}
+]
+
+response = client.chat.completions.create(model="gpt-4.1-mini", messages=wiadomosci)
+print(response.choices[0].message.content)
