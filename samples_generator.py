@@ -8,7 +8,7 @@ from utils import audyt_excela
 
 load_dotenv()
 
-klucz_api = os.getenv("OPEN_AI_KEY")
+klucz_api = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=klucz_api)
 
@@ -27,12 +27,19 @@ prompt = """
 """
 
 raport_bledów = audyt_excela("notebooks/Sales_Data_With_Issues.xlsx")
-
-
 wiadomosci = [
-    {"role": "system", "content": prompt},
-    {"role": "user", "content": raport_bledów}
-]
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": raport_bledów}
+    ]
 
-response = client.chat.completions.create(model="gpt-4.1-mini", messages=wiadomosci)
-print(response.choices[0].message.content)
+with open("dataset_treningowy.jsonl", "w", encoding="utf-8") as plik:
+    for blad in raport_bledów:
+        # Przerobienie słownika na tekst
+        blad_tekst = json.dumps(blad, ensure_ascii=False)
+        wiadomosci = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": raport_bledów}
+    ]
+        response = client.chat.completions.create(model="gpt-4.1-mini", messages=wiadomosci)
+        linia = {"instruction": blad_tekst, "output": response.choices[0].message.content}
+        plik.write(json.dumps(linia, ensure_ascii=False) + "\n")
