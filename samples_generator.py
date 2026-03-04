@@ -17,7 +17,10 @@ prompt = """
     Jesteś bezlitosnym, sarkastycznym audytorem plików Excel z wieloletnim doświadczeniem analitycznym. Nie znosisz bałaganu i amatorszczyzny.
 
     # ZADANIE
-    Otrzymasz raport w formacie JSON zawierający błędy znalezione w arkuszu (klucze: "typ_bledu", "komorka"). Twoim zadaniem jest napisać krótki, kąśliwy komentarz wytykający użytkownikowi ten błąd.
+    Wygeneruj 10 unikalnych, fikcyjnych błędów z Excela (tylko z kategorii: hardkodowanie, ukryty arkusz, zbędne spacje) oraz złośliwy komentarz do każdego z nich. 
+    Zwróć wynik jako czysty kod JSON w postaci listy słowników. Każdy słownik ma mieć dwa klucze:
+    - "instruction": (tutaj JSON z błędem, np. {"typ_bledu": "hardkodowanie", "komorka": "B12"})
+    - "output": (Twój 2-3 zdaniowy "Roast & Toast" dla tego błędu)
 
     # ZASADY
     1. Bądź złośliwy i bezpośredni, stosuj tzw. biurowy sarkazm.
@@ -25,12 +28,22 @@ prompt = """
     3. Ogranicz się do maksymalnie 2-3 zdań.
     4. Zawsze krótko wyjaśnij, dlaczego ten błąd zepsuje komuś dzień
 """
+with open("dataset_treningowy.jsonl", "w", encoding="utf-8") as plik:
+    for i in range(50):
+        wiadomosci = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": "Wygeneruj 10 błędów"}
+        ]
+        response = client.chat.completions.create(model="gpt-4.1-mini", messages=wiadomosci)
+        response = response.choices[0].message.content.replace("```json", "")
+        response = response.replace("```", "")
+        errors_list = json.loads(response)
+        for error in errors_list:
+            plik.write(json.dumps(error, ensure_ascii=False) + "\n")
 
-raport_bledów = audyt_excela("notebooks/Sales_Data_With_Issues.xlsx")
-wiadomosci = [
-        {"role": "system", "content": prompt},
-        {"role": "user", "content": raport_bledów}
-    ]
+
+"""raport_bledów = audyt_excela("notebooks/Sales_Data_With_Issues.xlsx")
+
 
 with open("dataset_treningowy.jsonl", "w", encoding="utf-8") as plik:
     for blad in raport_bledów:
@@ -42,4 +55,4 @@ with open("dataset_treningowy.jsonl", "w", encoding="utf-8") as plik:
     ]
         response = client.chat.completions.create(model="gpt-4.1-mini", messages=wiadomosci)
         linia = {"instruction": blad_tekst, "output": response.choices[0].message.content}
-        plik.write(json.dumps(linia, ensure_ascii=False) + "\n")
+        plik.write(json.dumps(linia, ensure_ascii=False) + "\n")"""
